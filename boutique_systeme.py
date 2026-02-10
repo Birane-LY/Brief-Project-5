@@ -10,7 +10,9 @@ boutique_gestion_systeme = mysql.connector.connect(
 )
 print("Connexion réussie")
 
+cursor = boutique_gestion_systeme.cursor()
 
+# Rendre le terminal attractif
 def afficher_separateur(caractere="=", longueur=70):
     print(caractere * longueur)
 
@@ -24,7 +26,7 @@ def generer_code_produit():
     cursor = boutique_gestion_systeme.cursor()
     cursor.execute("SELECT MAX(id_produit) FROM Produits")
     res = cursor.fetchone()[0]
-    next_id = (res or 0) + 1
+    next_id = 1 if res is None else res + 1
     return f"P{next_id:03d}"
 
 # --- FONCTIONNALITÉS ---
@@ -65,15 +67,15 @@ def ajouter_produit():
             print("ID inexistant !")
     
     while True:
-        designation = input("Désignation : ").strip().capitalize()
-        if designation.replace(" ", "").isalnum() and len(designation) >= 3: 
+        designation = input("Désignation : ").capitalize()
+        if not designation.isdigit() and len(designation) >= 3 and designation.startswith(r'[a-zA-Z]'): 
             break
         else:
             print("Veuillez saisir une désignation valide (lettres/chiffres, min 3 caractères)")
         
     while True:
         prix = input("Prix unitaire : ")
-        if prix.isdigit() and int(prix) >=100:
+        if prix.isdigit() and float(prix) >=100:
             break
         else:
             print("Montant invalide !")
@@ -158,8 +160,6 @@ def vendre_produit():
     cursor = boutique_gestion_systeme.cursor()
     while True:
         code = input("Code produit à vendre : ").strip().upper()
-        query = """ INSERT INTO Produits (id_produit, code_produit, designation, prix, quantite) VALUES (%s, %s, %s, %s, %s)"""
-        # ... inside vendre_produit() ...
         cursor.execute("SELECT id_produit, designation, prix, quantite FROM Produits WHERE code_produit = %s", (code,))
         res = cursor.fetchone()
 
@@ -191,6 +191,7 @@ def vendre_produit():
     
     boutique_gestion_systeme.commit()
     print(f" Vente réussie ! Total : {formater_prix(prix * qte)} F CFA")
+
 # Affichage du stock restant
 def afficher_alertes():
     cursor = boutique_gestion_systeme.cursor()
@@ -289,7 +290,7 @@ def supprimer_produit():
         return
   
     id_produit, designation, prix, quantite = resultat
-    res =resultat
+
     print(f"\n Produit à supprimer :")
     print(f"   Code : {code}")
     print(f"   Nom : {designation}")
@@ -349,3 +350,8 @@ def menu_principal():
 
 if __name__ == "__main__":
     menu_principal()
+
+cursor.close()
+boutique_gestion_systeme.close()
+
+
